@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YT → MP3 Converter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a40;
+    --accent: #ff3c5f;
+    --accent2: #7c3aed;
+    --text: #e8e8f0;
+    --muted: #666680;
+    --success: #00d68f;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 80px;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,60,95,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,60,95,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow blob */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(124,58,237,.18) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 660px;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,60,95,.12);
+    border: 1px solid rgba(255,60,95,.3);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-family: var(--font-mono);
+    font-size: .7rem;
+    letter-spacing: .12em;
+    color: var(--accent);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+
+  .logo-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.5s infinite; }
+
+  h1 {
+    font-size: clamp(2.4rem, 7vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -.02em;
+    background: linear-gradient(135deg, #fff 0%, #bbb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent) 0%, #ff7a59 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: .9rem;
+    letter-spacing: .03em;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,60,95,.5), transparent);
+  }
+
+  /* ── Input ── */
+  .input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .url-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: .8rem;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  .url-input::placeholder { color: var(--muted); }
+
+  .url-input:focus {
+    border-color: rgba(255,60,95,.5);
+    box-shadow: 0 0 0 3px rgba(255,60,95,.1);
+  }
+
+  .btn {
+    padding: 14px 22px;
+    border: none;
+    border-radius: 12px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .85rem;
+    letter-spacing: .02em;
+    cursor: pointer;
+    transition: transform .15s, opacity .15s;
+    white-space: nowrap;
+  }
+
+  .btn:active { transform: scale(.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #c02040);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255,60,95,.3);
+  }
+
+  .btn-primary:hover { opacity: .9; }
+
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+  .btn-success {
+    background: linear-gradient(135deg, var(--success), #00a86b);
+    color: #000;
+    box-shadow: 0 4px 20px rgba(0,214,143,.3);
+  }
+
+  /* ── Info panel ── */
+  .info-panel {
+    display: none;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+
+  .info-panel.visible { display: flex; }
+
+  .thumbnail {
+    width: 100px;
+    height: 70px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .info-text { flex: 1; min-width: 0; }
+
+  .video-title {
+    font-weight: 700;
+    font-size: .9rem;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .video-meta {
+    font-family: var(--font-mono);
+    font-size: .72rem;
+    color: var(--muted);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Progress ── */
+  .progress-wrap {
+    display: none;
+    margin-bottom: 16px;
+  }
+
+  .progress-wrap.visible { display: block; }
+
+  .progress-label {
+    font-family: var(--font-mono);
+    font-size: .72rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    width: 0%;
+    transition: width .3s;
+    animation: indeterminate 1.5s infinite linear;
+    background-size: 200% 100%;
+  }
+
+  /* ── Download area ── */
+  .download-area {
+    display: none;
+    text-align: center;
+    padding: 12px 0 4px;
+  }
+
+  .download-area.visible { display: block; }
+
+  .download-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--success), #00a86b);
+    color: #000;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .9rem;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 4px 20px rgba(0,214,143,.3);
+    transition: transform .15s, opacity .15s;
+  }
+
+  .download-link:hover { opacity: .9; transform: translateY(-1px); }
+
+  .file-size {
+    font-family: var(--font-mono);
+    font-size: .7rem;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  /* ── Error ── */
+  .error-box {
+    display: none;
+    background: rgba(255,60,95,.1);
+    border: 1px solid rgba(255,60,95,.3);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    color: var(--accent);
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+
+  .error-box.visible { display: block; }
+
+  /* ── Install guide ── */
+  .guide {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 32px;
+  }
+
+  .guide h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .guide h2::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    color: #a0e4ff;
+    margin-bottom: 10px;
+    position: relative;
+    overflow-x: auto;
+  }
+
+  .code-block .comment { color: var(--muted); }
+
+  .step {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255,60,95,.2);
+    border: 1px solid rgba(255,60,95,.4);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: .7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-content p {
+    font-size: .85rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  /* ── Animations ── */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+  }
+
+  @keyframes indeterminate {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in { animation: fadeIn .4s ease both; }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <header>
+    <div class="logo-badge"><span></span> Free · No Login · Unlimited</div>
+    <h1>YouTube<br>sang <em>MP3</em></h1>
+    <p class="subtitle">Dán link → Tải nhạc. Nhanh, miễn phí, không giới hạn.</p>
+  </header>
+
+  <div class="card animate-in">
+
+    <div class="input-group">
+      <input
+        type="url"
+        class="url-input"
+        id="urlInput"
+        placeholder="https://www.youtube.com/watch?v=..."
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button class="btn btn-primary" id="infoBtn" onclick="fetchInfo()">Kiểm tra</button>
+    </div>
+
+    <!-- Video info -->
+    <div class="info-panel" id="infoPanel">
+      <img class="thumbnail" id="thumbnail" src="" alt="thumbnail">
+      <div class="info-text">
+        <div class="video-title" id="videoTitle"></div>
+        <div class="video-meta">
+          <span id="videoDuration">⏱ —</span>
+          <span id="videoUploader">👤 —</span>
+          <span id="videoViews">👁 —</span>
+        </div>
+        <button class="btn btn-primary" id="downloadBtn" style="margin-top:10px;font-size:.8rem;padding:10px 18px;" onclick="startDownload()">
+          ⬇ Tải MP3
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-label">
+        <span id="progressText">Đang xử lý...</span>
+        <span>MP3</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <!-- Download link -->
+    <div class="download-area" id="downloadArea">
+      <a class="download-link" id="downloadLink" href="#" download>
+        ✓ Tải xuống MP3
+      </a>
+      <div class="file-size" id="fileSize"></div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-box" id="errorBox"></div>
+
+  </div>
+
+  <!-- Install Guide -->
+  <div class="guide animate-in" style="animation-delay:.1s">
+    <h2>Yêu cầu cài đặt</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <p>Cài <strong>yt-dlp</strong> — công cụ tải video mạnh nhất hiện nay:</p>
+        <div class="code-block"><span class="comment"># Linux / macOS</span>
+pip install yt-dlp
+
+<span class="comment"># Hoặc</span>
+sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+sudo chmod a+rx /usr/local/bin/yt-dlp</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <p>Cài <strong>ffmpeg</strong> để convert sang MP3:</p>
+        <div class="code-block"><span class="comment"># Ubuntu / Debian</span>
+sudo apt install ffmpeg
+
+<span class="comment"># macOS (Homebrew)</span>
+brew install ffmpeg</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <p>Upload 2 file <code style="color:#ff3c5f">youtube-mp3.php</code> và <code style="color:#ff3c5f">youtube-mp3.html</code> vào cùng thư mục trên server PHP. Tạo thư mục <code style="color:#ff3c5f">downloads/</code> với quyền ghi (chmod 755).</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const API = 'youtube-mp3.php';
+
+function fmt(s) {
+  const m = Math.floor(s/60), sec = s%60;
+  return m + ':' + String(sec).padStart(2,'0');
+}
+function fmtViews(n) {
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M lượt xem';
+  if(n>=1e3) return (n/1e3).toFixed(1)+'K lượt xem';
+  return n+' lượt xem';
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('visible');
+}
+
+function hideError() {
+  document.getElementById('errorBox').classList.remove('visible');
+}
+
+function setLoading(btn, loading, text) {
+  btn.disabled = loading;
+  btn.textContent = loading ? text : btn.dataset.orig || btn.textContent;
+}
+
+async function fetchInfo() {
+  const url = document.getElementById('urlInput').value.trim();
+  if(!url) return showError('Vui lòng nhập URL YouTube.');
+  hideError();
+
+  const btn = document.getElementById('infoBtn');
+  btn.disabled = true; btn.textContent = 'Đang tải...';
+
+  // Reset state
+  document.getElementById('infoPanel').classList.remove('visible');
+  document.getElementById('downloadArea').classList.remove('visible');
+  document.getElementById('progressWrap').classList.remove('visible');
+
+  try {
+    const res = await fetch(API + '?action=info&url=' + encodeURIComponent(url));
+    const data = await res.json();
+
+    if(data.error) return showError(data.error);
+
+    document.getElementById('thumbnail').src = data.thumbnail || '';
+    document.getElementById('videoTitle').textContent = data.title;
+    document.getElementById('videoDuration').textContent = '⏱ ' + fmt(data.duration);
+    document.getElementById('videoUploader').textContent = '👤 ' + data.uploader;
+    document.getElementById('videoViews').textContent = '👁 ' + fmtViews(data.view_count);
+    document.getElementById('infoPanel').classList.add('visible');
+
+  } catch(e) {
+    showError('Lỗi kết nối. Kiểm tra server PHP.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Kiểm tra';
+  }
+}
+
+async function startDownload() {
+  const url = document.getElementById('urlInput').value.trim();
+  if(!url) return;
+  hideError();
+
+  const btn = document.getElementById('downloadBtn');
+  btn.disabled = true; btn.textContent = '⏳ Đang chuyển đổi...';
+
+  document.getElementById('progressWrap').classList.add('visible');
+  document.getElementById('progressText').textContent = 'Đang tải & convert sang MP3...';
+  document.getElementById('downloadArea').classList.remove('visible');
+
+  try {
+    const res = await fetch(API + '?action=download&url=' + encodeURIComponent(url));
+    const data = await res.json();
+
+    document.getElementById('progressWrap').classList.remove('visible');
+
+    if(data.error) return showError(data.error);
+
+    document.getElementById('downloadLink').href = data.url;
+    document.getElementById('downloadLink').download = data.filename;
+    document.getElementById('fileSize').textContent = 'Kích thước: ' + data.size_mb + ' MB';
+    document.getElementById('downloadArea').classList.add('visible');
+
+  } catch(e) {
+    showError('Lỗi kết nối khi tải xuống.');
+    document.getElementById('progressWrap').classList.remove('visible');
+  } finally {
+    btn.disabled = false; btn.textContent = '⬇ Tải MP3';
+  }
+}
+
+// Enter key support
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter') fetchInfo();
+});
+</script>
+</body>
+</html>

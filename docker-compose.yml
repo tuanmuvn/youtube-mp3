@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  youtube-mp3:
+    build: .
+    container_name: youtube-mp3
+    restart: unless-stopped
+    ports:
+      - "8050:80"
+    volumes:
+      - ./downloads:/var/www/html/downloads
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    networks:
+      - npm_proxy_network
+
+networks:
+  npm_proxy_network:
+    external: true

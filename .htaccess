@@ -1,0 +1,7 @@
+Options -Indexes
+DirectoryIndex youtube-mp3.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^$ youtube-mp3.php [L]
+</IfModule>
