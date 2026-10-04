@@ -6,7 +6,7 @@ services:
     container_name: youtube-mp3
     restart: unless-stopped
     ports:
-      - "8050:8050"
+      - "8050:80"
     volumes:
       - ./downloads:/var/www/html/downloads
     environment:
