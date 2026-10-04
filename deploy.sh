@@ -6,7 +6,7 @@
 
 set -e
 
-REPO_URL="https://github.com/TEN_BAN/TEN_REPO.git"   # <-- Sửa thành repo của bạn
+REPO_URL="https://github.com/tuanmuvn/youtube-mp3.git"   # <-- Sửa thành repo của bạn
 APP_DIR="$HOME/apps/youtube-mp3"
 NETWORK="npm_proxy_network"   # <-- Sửa nếu tên network NPM của bạn khác
 
