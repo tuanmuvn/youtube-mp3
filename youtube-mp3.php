@@ -37,14 +37,28 @@ function checkYtDlp(): bool {
 
 // Lấy thông tin video
 function getVideoInfo(string $url): array {
-    $cmd = 'yt-dlp --dump-json --no-playlist ' . escapeshellarg($url) . ' 2>&1';
+    // Tách stderr ra riêng để tránh lẫn vào JSON
+    $cmd = 'yt-dlp --dump-json --no-playlist ' . escapeshellarg($url) . ' 2>/dev/null';
     exec($cmd, $output, $exitCode);
 
-    if ($exitCode !== 0) {
+    if ($exitCode !== 0 || empty($output)) {
         return ['error' => 'Không thể lấy thông tin video. Kiểm tra lại URL.'];
     }
 
-    $json = implode('', $output);
+    // Lọc lấy dòng nào là JSON hợp lệ (bắt đầu bằng '{')
+    $json = null;
+    foreach (array_reverse($output) as $line) {
+        $line = trim($line);
+        if (str_starts_with($line, '{')) {
+            $json = $line;
+            break;
+        }
+    }
+
+    if (!$json) {
+        return ['error' => 'Không thể lấy thông tin video. Kiểm tra lại URL.'];
+    }
+
     $data = json_decode($json, true);
 
     if (!$data) {
