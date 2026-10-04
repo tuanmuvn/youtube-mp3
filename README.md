@@ -50,6 +50,13 @@
 
 ## 🚀 Cài đặt
 
+### Chạy 1 lần rồi chuyển hẳn sang bước 6
+```bash
+curl -sSL https://raw.githubusercontent.com/tuanmuvn/youtube-mp3/refs/heads/main/deploy.sh | bash
+```
+
+### Hoặc chạy từ bước 1
+
 ### Bước 1 — Clone repo
 
 ```bash
