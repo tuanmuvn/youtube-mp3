@@ -57,8 +57,8 @@ if docker ps | grep -q "youtube-mp3"; then
     echo ""
     echo "=============================="
     echo "  [✓] Deploy thành công!"
-    echo "  Truy cập: http://$(curl -s ifconfig.me):8050"
-    echo "  Sau đó cấu hình NPM trỏ domain vào cổng 8050"
+    echo "  Truy cập: http://$(curl -s ifconfig.me):80"
+    echo "  Sau đó cấu hình NPM trỏ domain vào cổng 80"
     echo "=============================="
 else
     echo "[LỖI] Container không khởi động được. Xem log:"
